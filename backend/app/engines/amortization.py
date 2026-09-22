@@ -34,3 +34,22 @@ def equal_payment_schedule(principal: float, annual_rate: float, months: int) ->
         "total_payment": round(sum(x["payment"] for x in rows), 2),
         "rows": rows,
     }
+
+
+def payoff_comparison(principal: float, annual_rate: float, months: int, elapsed: int) -> dict:
+    """结清与续还对照：第 elapsed 期末一次性结清 vs 按原表续还。"""
+    n = int(months)
+    p = int(elapsed)
+    if p < 1 or p > n - 1:
+        raise ValueError("elapsed")
+    rows = equal_payment_schedule(principal, annual_rate, n)["rows"]
+    remaining_principal = rows[p - 1]["balance"]
+    remaining_interest = round(sum(r["interest"] for r in rows[p:]), 2)
+    payoff_amount = remaining_principal
+    return {
+        "elapsed": p,
+        "remaining_principal": remaining_principal,
+        "remaining_interest": remaining_interest,
+        "payoff_amount": payoff_amount,
+        "excess_interest": round(remaining_principal + remaining_interest - payoff_amount, 2),
+    }

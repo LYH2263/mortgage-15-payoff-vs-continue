@@ -1,5 +1,5 @@
 from app.db import connect
-from app.engines.amortization import equal_payment_schedule
+from app.engines.amortization import equal_payment_schedule, payoff_comparison
 from app.repositories import loans, runs, settings
 
 class MortgageService:
@@ -19,6 +19,12 @@ class MortgageService:
         rid = None
         if persist:
             rid = runs.insert(self._c, "schedule", {"principal": principal, "annual_rate": annual_rate, "months": months}, out, loan_id)
+        return {"run_id": rid, **out}
+    def payoff_compare(self, principal, annual_rate, months, elapsed, loan_id, persist):
+        out = payoff_comparison(principal, annual_rate, months, elapsed)
+        rid = None
+        if persist:
+            rid = runs.insert(self._c, "payoff_compare", {"principal": principal, "annual_rate": annual_rate, "months": months, "elapsed": elapsed}, out, loan_id)
         return {"run_id": rid, **out}
     def dashboard(self):
         items = loans.list_all(self._c)
