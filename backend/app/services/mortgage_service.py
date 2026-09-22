@@ -1,5 +1,5 @@
 from app.db import connect
-from app.engines.amortization import equal_payment_schedule
+from app.engines.amortization import equal_payment_schedule, settle_comparison
 from app.repositories import loans, runs, settings
 
 class MortgageService:
@@ -19,6 +19,15 @@ class MortgageService:
         rid = None
         if persist:
             rid = runs.insert(self._c, "schedule", {"principal": principal, "annual_rate": annual_rate, "months": months}, out, loan_id)
+        return {"run_id": rid, **out}
+    def settle_compare(self, principal, annual_rate, months, paid_periods, loan_id, persist):
+        # 越界由引擎抛 ValueError，路由转 400；持久化只在计算成功后发生
+        out = settle_comparison(principal, annual_rate, months, paid_periods)
+        rid = None
+        if persist:
+            rid = runs.insert(self._c, "settle_compare",
+                {"principal": principal, "annual_rate": annual_rate, "months": months, "paid_periods": paid_periods},
+                out, loan_id)
         return {"run_id": rid, **out}
     def dashboard(self):
         items = loans.list_all(self._c)

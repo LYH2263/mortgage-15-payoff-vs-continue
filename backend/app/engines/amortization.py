@@ -34,3 +34,27 @@ def equal_payment_schedule(principal: float, annual_rate: float, months: int) ->
         "total_payment": round(sum(x["payment"] for x in rows), 2),
         "rows": rows,
     }
+
+def settle_comparison(principal: float, annual_rate: float, months: int, paid_periods: int) -> dict:
+    """第 P 期末一次性结清 vs 继续按原表还完的对照。
+
+    P 须落在 1..months-1：第 0 期无已还期、最后一期已无剩余利息可对照。
+    返回剩余本金（即一次性结清所需余额）、续还剩余利息、超额利息。
+    """
+    n = int(months)
+    p = int(paid_periods)
+    if p < 1 or p > n - 1:
+        raise ValueError("paid_periods out of range")
+    sched = equal_payment_schedule(principal, annual_rate, months)
+    rows = sched["rows"]
+    remaining_principal = rows[p - 1]["balance"]
+    remaining_interest = round(sum(r["interest"] for r in rows[p:]), 2)
+    settle_amount = remaining_principal
+    extra_interest = remaining_interest
+    return {
+        "paid_periods": p,
+        "remaining_principal": round(remaining_principal, 2),
+        "remaining_interest": remaining_interest,
+        "settle_amount": round(settle_amount, 2),
+        "extra_interest": round(extra_interest, 2),
+    }
